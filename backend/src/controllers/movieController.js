@@ -99,7 +99,17 @@ export const adminLogin = async (request, reply) => {
   try {
     const { username, password } = request.body;
     
-    // Database mein admin ko dhundo
+    // Auto-create admin if none exists
+    const adminCount = await Admin.countDocuments();
+    if (adminCount === 0) {
+      console.log("No admin found. Creating default admin...");
+      const defaultAdmin = new Admin({ 
+        username: 'admin', 
+        password: 'admin123' 
+      });
+      await defaultAdmin.save();
+    }
+
     const admin = await Admin.findOne({ username, password });
 
     if (admin) {
@@ -108,6 +118,7 @@ export const adminLogin = async (request, reply) => {
       reply.status(401).send({ success: false, message: "Invalid Credentials" });
     }
   } catch (err) {
+    console.error("Login Error:", err);
     reply.status(500).send({ error: "Server Error" });
   }
 };
